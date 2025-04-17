@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Protocols Explained</title>
+    <style>
+        /* Basic Reset & Body Styling */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        /* App Container */
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #0056b3;
+        }
+        p.intro {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        /* Protocol Grid */
+        .protocol-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        /* Protocol Cards */
+        .protocol-card {
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #fff;
+            transition: all 0.3s ease;
+            filter: grayscale(1);
+            opacity: 0.7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px; /* Ensure cards have some height */
+        }
+        .protocol-card:hover {
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .protocol-card.active {
+            border: 3px solid #007bff;
+            filter: grayscale(0);
+            opacity: 1;
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+        }
+        .protocol-card .icon {
+            font-size: 2.5em; /* Larger icons */
+            margin-bottom: 10px;
+            line-height: 1; /* Prevent extra space */
+        }
+        .protocol-card .title {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Description Area */
+        .description-area {
+            border: 1px solid #eee;
+            background-color: #f9f9f9;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            min-height: 80px; /* Ensure space even when empty */
+            display: none; /* Initially hidden */
+        }
+        .description-area h3 {
+            margin-bottom: 10px;
+            color: #0056b3;
+        }
+
+        /* Buttons */
+        .action-button {
+            display: block; /* Make buttons block level */
+            margin: 10px auto 20px auto; /* Center buttons */
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            width: fit-content; /* Adjust width to content */
+        }
+        .action-button:hover {
+            background-color: #218838;
+        }
+        .action-button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+        #simulateBtn { display: none; } /* Initially hidden */
+        #restartBtn { display: none; } /* Initially hidden */
+
+        /* Animation Area */
+        .animation-area {
+            position: relative;
+            height: 150px;
+            border: 1px dashed #ccc;
+            background-color: #f0f8ff; /* Light blue background */
+            margin-top: 20px;
+            border-radius: 5px;
+            overflow: hidden; /* Hide shapes going outside */
+            display: none; /* Initially hidden */
+        }
+        .endpoint {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 40px;
+            background-color: #ddd;
+            border: 1px solid #999;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .start-point {
+            left: 10px;
+        }
+        .end-point {
+            right: 10px;
+        }
+
+        /* Packet Styling */
+        .packet {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%; /* Circle shape */
+            background-color: #007bff; /* Blue for request */
+            color: white;
+            font-size: 0.7em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: calc(50% - 15px); /* Center vertically */
+            left: 80px; /* Start position */
+            opacity: 0; /* Start invisible */
+            animation-fill-mode: forwards; /* Keep final state */
+        }
+        .packet.response {
+            background-color: #ffc107; /* Yellow for response */
+            color: #333;
+        }
+
+        /* Animation Keyframes */
+        @keyframes moveRight {
+            0% { left: 80px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: calc(100% - 110px); opacity: 0; } /* End position before endpoint */
+        }
+        @keyframes moveLeft {
+            0% { left: calc(100% - 110px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 80px; opacity: 0; } /* End position before startpoint */
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 600px) {
+            .protocol-grid {
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                gap: 10px;
+            }
+            .protocol-card {
+                padding: 10px 5px;
+                min-height: 80px;
+            }
+            .protocol-card .icon {
+                font-size: 2em;
+            }
+            .protocol-card .title {
+                font-size: 0.8em;
+            }
+            .endpoint {
+                width: 50px;
+                height: 30px;
+                font-size: 0.7em;
+            }
+            .packet {
+                width: 25px;
+                height: 25px;
+                font-size: 0.6em;
+                top: calc(50% - 12.5px);
+            }
+            .start-point { left: 5px; }
+            .end-point { right: 5px; }
+             @keyframes moveRight {
+                0% { left: 60px; opacity: 0; } /* Adjusted start for smaller screens */
+                10% { opacity: 1; }
+                90% { opacity: 1; }
+                100% { left: calc(100% - 85px); opacity: 0; } /* Adjusted end */
+            }
+            @keyframes moveLeft {
+                0% { left: calc(100% - 85px); opacity: 0; } /* Adjusted start */
+                10% { opacity: 1; }
+                90% { opacity: 1; }
+                100% { left: 60px; opacity: 0; } /* Adjusted end */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>The Internet City: Traffic Rules (Protocols)</h1>
+        <p class="intro">Imagine the internet as a city. Network protocols are the traffic rules guiding information (web pages, files, emails) between buildings (devices). Click a protocol to learn its role and see a simplified simulation!</p>
+
+        <div class="protocol-grid" id="protocolGrid">
+            <!-- Protocol cards will be generated by JavaScript -->
+        </div>
+
+        <div class="description-area" id="descriptionArea">
+            <h3 id="descTitle"></h3>
+            <p id="descText"></p>
+        </div>
+
+        <button id="simulateBtn" class="action-button" disabled>Simulate Route</button>
+
+        <div class="animation-area" id="animationArea">
+            <div class="endpoint start-point">Client</div>
+            <div class="endpoint end-point">Server</div>
+            <!-- Animated packets will be added here by JavaScript -->
+        </div>
+
+        <button id="restartBtn" class="action-button">Restart Animation</button>
+
+    </div>
+
+    <script>
+        const protocols = [
+            { id: 'http', title: 'HTTP/HTTPS', icon: '🌐/🔒', description: 'The foundation for data communication on the web. HTTP transfers web pages, while HTTPS encrypts the data for secure transmission.', initials: 'H', animation: 'request-response' },
+            { id: 'ftp', title: 'FTP', icon: '📁⇄', description: 'Used to transfer files between a client and a server.', initials: 'F', animation: 'request-response-files' },
+            { id: 'smtp', title: 'SMTP', icon: '✉️→', description: 'The standard protocol for sending emails.', initials: 'E', animation: 'one-way' },
+            { id: 'dns', title: 'DNS', icon: '🌐→IP', description: 'Translates domain names (like example.com) into IP addresses that computers use.', initials: 'D', animation: 'request-response-lookup' },
+            { id: 'dhcp', title: 'DHCP', icon: '💻←IP', description: 'Automatically assigns IP addresses and network configuration parameters to devices.', initials: 'IP', animation: 'request-response-assign' },
+            { id: 'ssh', title: 'SSH', icon: '🔐💻', description: 'Provides secure access to remote servers.', initials: 'S', animation: 'secure-session' },
+            { id: 'tcpip', title: 'TCP/IP', icon: '📦🔗📦', description: 'The backbone of the internet, enabling reliable data transmission by breaking data into packets.', initials: 'T/I', animation: 'multi-packet' },
+            { id: 'icmp', title: 'ICMP', icon: '❗핑', description: 'Sends error messages and operational information about network communication (like Ping).', initials: 'I', animation: 'request-response-ping' },
+            { id: 'rip_ospf', title: 'RIP & OSPF', icon: '🗺️📍', description: 'Routing protocols that determine the best path for data to travel across a network.', initials: 'R', animation: 'routing-discovery' } // Simplified initials 'R'
+        ];
+
+        const grid = document.getElementById('protocolGrid');
+        const descriptionArea = document.getElementById('descriptionArea');
+        const descTitle = document.getElementById('descTitle');
+        const descText = document.getElementById('descText');
+        const simulateBtn = document.getElementById('simulateBtn');
+        const animationArea = document.getElementById('animationArea');
+        const restartBtn = document.getElementById('restartBtn');
+
+        let activeProtocol = null;
+        let animationTimeout = null; // To clear ongoing timeouts if needed
+
+        // Generate Protocol Cards
+        protocols.forEach(protocol => {
+            const card = document.createElement('div');
+            card.className = 'protocol-card';
+            card.dataset.protocolId = protocol.id;
+            card.innerHTML = `
+                <div class="icon">${protocol.icon}</div>
+                <div class="title">${protocol.title}</div>
+            `;
+            card.addEventListener('click', handleCardClick);
+            grid.appendChild(card);
+        });
+
+        // Event Handlers
+        function handleCardClick(event) {
+            const clickedCard = event.currentTarget;
+            const protocolId = clickedCard.dataset.protocolId;
+
+            // Update active state
+            document.querySelectorAll('.protocol-card').forEach(card => card.classList.remove('active'));
+            clickedCard.classList.add('active');
+
+            // Find and display description
+            activeProtocol = protocols.find(p => p.id === protocolId);
+            if (activeProtocol) {
+                descTitle.textContent = activeProtocol.title;
+                descText.textContent = activeProtocol.description;
+                descriptionArea.style.display = 'block';
+                simulateBtn.disabled = false;
+                simulateBtn.style.display = 'block'; // Show simulate button
+            } else {
+                descriptionArea.style.display = 'none';
+                simulateBtn.disabled = true;
+                simulateBtn.style.display = 'none';
+            }
+
+            // Reset animation area
+            resetAnimation();
+            animationArea.style.display = 'none';
+            restartBtn.style.display = 'none';
+        }
+
+        simulateBtn.addEventListener('click', () => {
+            if (!activeProtocol) return;
+            startAnimation(activeProtocol);
+        });
+
+        restartBtn.addEventListener('click', () => {
+            if (!activeProtocol) return;
+            resetAnimation(); // Clear previous first
+            startAnimation(activeProtocol); // Start anew
+        });
+
+        // Animation Functions
+        function resetAnimation() {
+            clearTimeout(animationTimeout); // Clear any scheduled animations
+            animationArea.innerHTML = `
+                <div class="endpoint start-point">Client</div>
+                <div class="endpoint end-point">Server</div>
+            `; // Reset content but keep endpoints
+        }
+
+        function createPacket(initials, isResponse = false, delay = 0, duration = 3) {
+            const packet = document.createElement('div');
+            packet.className = 'packet';
+            packet.textContent = initials;
+            if (isResponse) {
+                packet.classList.add('response');
+                packet.style.animation = `moveLeft ${duration}s ease-in-out ${delay}s forwards`;
+            } else {
+                packet.style.animation = `moveRight ${duration}s ease-in-out ${delay}s forwards`;
+            }
+            // Remove packet after animation finishes to prevent clutter
+            packet.addEventListener('animationend', () => {
+                 if (packet.parentNode === animationArea) { // Check if still attached
+                    // Don't remove immediately, let it fade out first
+                     setTimeout(() => {
+                         if (packet.parentNode === animationArea) animationArea.removeChild(packet);
+                     }, 50); // Short delay after animation ends
+                 }
+            });
+            return packet;
+        }
+
+        function startAnimation(protocol) {
+            resetAnimation();
+            animationArea.style.display = 'block'; // Show animation area
+            restartBtn.style.display = 'block'; // Show restart button
+            simulateBtn.style.display = 'none'; // Hide simulate button
+
+            const initials = protocol.initials;
+            const type = protocol.animation;
+
+            // Simplified animation logic based on type
+            switch (type) {
+                case 'request-response': // HTTP, FTP (simplified), DNS, DHCP, ICMP
+                case 'request-response-lookup':
+                case 'request-response-assign':
+                case 'request-response-ping':
+                     animationArea.appendChild(createPacket(initials, false, 0, 2.5)); // Request
+                     animationTimeout = setTimeout(() => {
+                        animationArea.appendChild(createPacket(initials, true, 0, 2.5)); // Response
+                    }, 1500); // Delay response
+                    break;
+                case 'one-way': // SMTP
+                    animationArea.appendChild(createPacket(initials, false, 0, 3));
+                    break;
+                case 'request-response-files': // FTP with "files" idea
+                     animationArea.appendChild(createPacket(initials, false, 0, 2)); // Request
+                     animationTimeout = setTimeout(() => {
+                         animationArea.appendChild(createPacket('Data', true, 0, 2.5)); // File data 1
+                         animationArea.appendChild(createPacket('Data', true, 0.5, 2.5)); // File data 2
+                     }, 1200);
+                    break;
+                case 'secure-session': // SSH
+                    animationArea.appendChild(createPacket('🔑', false, 0, 2)); // Secure handshake part 1
+                    animationTimeout = setTimeout(() => {
+                        animationArea.appendChild(createPacket('🔑', true, 0, 2)); // Secure handshake part 2
+                        setTimeout(() => {
+                            animationArea.appendChild(createPacket(initials, false, 0, 2)); // Data flow
+                        }, 2200); // Delay data
+                    }, 1200);
+                    break;
+                case 'multi-packet': // TCP/IP
+                    animationArea.appendChild(createPacket(initials, false, 0, 3));
+                    animationArea.appendChild(createPacket(initials, false, 0.5, 3));
+                     animationTimeout = setTimeout(() => {
+                         animationArea.appendChild(createPacket('ACK', true, 0, 2)); // Acknowledgement
+                         animationArea.appendChild(createPacket('ACK', true, 0.5, 2)); // Acknowledgement
+                     }, 2000);
+                    break;
+                case 'routing-discovery': // RIP/OSPF
+                    animationArea.appendChild(createPacket(initials, false, 0, 2.5)); // Route info request/update
+                    animationTimeout = setTimeout(() => {
+                        animationArea.appendChild(createPacket(initials, true, 0, 2.5)); // Route info response/update
+                    }, 1500);
+                    break;
+                default:
+                    // Default simple request-response
+                    animationArea.appendChild(createPacket(initials, false, 0, 3));
+                    animationTimeout = setTimeout(() => {
+                        animationArea.appendChild(createPacket(initials, true, 0, 3));
+                    }, 1800);
+            }
+        }
+
+    </script>
+
+</body>
+</html>
